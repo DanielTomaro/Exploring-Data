@@ -1,0 +1,470 @@
+---
+title: "Assignment 2"
+author: "Daniel Tomaro"
+date: "2023-10-19"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+getwd()
+```
+
+Task 1
+
+A.
+
+```{r}
+# Load the required packages
+library(readr)
+library(dplyr)
+library(lubridate)
+# Read the dataset
+library(readr)
+Studentmarks <- read_csv("Studentmarks.csv")
+View(Studentmarks)
+# Calculate age and add new column called Age1
+Studentmarks$Age1 <- as.numeric(format(Sys.Date(), "%Y")) - as.numeric(format(as.Date(Studentmarks$dob, "%d/%m/%Y"), "%Y"))
+# Print the updated dataset
+print(Studentmarks)
+```
+
+B.
+
+```{r}
+# Split DOB into Day, Month and Year
+Studentmarks$Day <- format(as.Date(Studentmarks$dob, format = "%d/%m/%Y"), "%d")
+Studentmarks$Month <- format(as.Date(Studentmarks$dob, format = "%d/%m/%Y"), "%m")
+Studentmarks$Year <- format(as.Date(Studentmarks$dob, format = "%d/%m/%Y"), "%Y")
+# Calculate the age based on the "Year" column
+Studentmarks$Year <- as.numeric(Studentmarks$Year)
+current_year <- as.numeric(format(Sys.Date(), "%Y"))
+Studentmarks$Age2 <- current_year - Studentmarks$Year
+# Print the updated dataset
+print(Studentmarks)
+```
+
+C.
+
+```{r}
+# Load the ggplot2 library
+library(ggplot2)
+# Create a scatter plot
+plot <- ggplot(Studentmarks, aes(x = Studentname)) +
+  geom_point(aes(y = `2020`, color = "2020")) +
+  geom_point(aes(y = `2021`, color = "2021")) +
+  geom_point(aes(y = `2022`, color = "2022")) +
+  labs(title = "Student Marks for Three Years", x = "Student Name", y = "Marks") +
+  scale_color_manual(values = c("2020" = "blue", "2021" = "red", "2022" = "green")) +
+  theme_minimal() +
+  guides(color = guide_legend(title = "Year"))
+# Show the plot
+print(plot)
+```
+
+D.
+
+```{r}
+# Calculate the total marks for each student
+Studentmarks$totalmarks <- rowSums(Studentmarks[, c("2020", "2021", "2022")])
+# Filter students who got at least 200 marks
+filtered_data <- subset(Studentmarks, totalmarks >= 200)
+# Sort the data by total marks in descending order
+filtered_data <- filtered_data[order(-filtered_data$totalmarks),]
+# Create a bar chart
+library(ggplot2)
+plot <- ggplot(filtered_data, aes(x = reorder(Studentname, -totalmarks), y = totalmarks)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(title = "Total Marks of Students (at least 200 marks)", x = "Student Name", y = "Total Marks") +
+  theme_minimal() +
+  coord_flip()
+# Show the bar chart
+print(plot)
+```
+
+Task 2
+
+A.
+
+```{r}
+# Read the data
+library(readr)
+Movies <- read_csv("Movies.csv")
+View(Movies)
+# Identify missing values
+# Check for missing values in the entire "Movies" dataset
+missing_values <- sum(is.na(Movies))
+# Check for missing values in each column of the "Movies" dataset
+missing_values_by_column <- colSums(is.na(Movies))
+# Print the total number of missing values in the "Movies" dataset
+cat("Total missing values in the 'Movies' dataset: ", missing_values, "\n")
+# Print missing values count for each column
+for (col_name in names(missing_values_by_column)) {
+  cat("Column '", col_name, "': ", missing_values_by_column[col_name], " missing values\n")
+}
+# Handle missing values
+# Impute the average for the "Reviews" column
+average_reviews <- mean(Movies$Reviews, na.rm = TRUE)
+Movies$Reviews[is.na(Movies$Reviews)] <- average_reviews
+# Impute the average for the "Duration" column
+average_duration <- mean(Movies$Duration, na.rm = TRUE)
+Movies$Duration[is.na(Movies$Duration)] <- average_duration
+# Impute the average for the "Actor_3_facebook_likes" column
+average_actor3_likes <- mean(Movies$Actor_3_facebook_likes, na.rm = TRUE)
+Movies$Actor_3_facebook_likes[is.na(Movies$Actor_3_facebook_likes)] <- average_actor3_likes
+# Impute the average for the "Actor_1_facebook_likes" column
+average_actor1_likes <- mean(Movies$Actor_1_facebook_likes, na.rm = TRUE)
+Movies$Actor_1_facebook_likes[is.na(Movies$Actor_1_facebook_likes)] <- average_actor1_likes
+# Impute the average for the "Facenumber_in_poster" column
+average_facenumber <- mean(Movies$Facenumber_in_poster, na.rm = TRUE)
+Movies$Facenumber_in_poster[is.na(Movies$Facenumber_in_poster)] <- average_facenumber
+# Delete the "Color" column
+Movies <- Movies[, -which(names(Movies) == "Color")]
+# Delete the "Actor_2_name" column
+Movies <- Movies[, -which(names(Movies) == "Actor_2_name")]
+# Delete the "Actor_1_name" column
+Movies <- Movies[, -which(names(Movies) == "Actor_1_name")]
+# Delete the "Plot_keywords" column
+Movies <- Movies[, -which(names(Movies) == "Plot_keywords")]
+# Delete the "Content_rating" column
+Movies <- Movies[, -which(names(Movies) == "Content_rating")]
+# Delete the "Aspect_ratio" column
+Movies <- Movies[, -which(names(Movies) == "Aspect_ratio")]
+# Print updated data
+View(Movies)
+```
+
+Reasons for handling missing values the way they were handled:
+
+Delete the "Color" column:
+Reason: The "Color" column appears to have only two unique values and doesn't provide significant information. It's not relevant to the analysis.
+
+Impute the average for the "Reviews" column:
+Reason: The "Reviews" columnn is not the actual rating of the movie it corresponds to but rather just the amount of reviews it has recieved. Imputing the average should not affect the analysis that much as it doesnt actually provide us any information on said "Review"
+
+Impute the average for the "Duration" column:
+Reason: "Duration" is numeric, and imputing the average is a reasonable approach, as it's unlikely to have a direct correlation with the rating or profit but still necessary due to it being numeric.
+
+Impute the average for the "Actor_3_facebook_likes" column:
+Reason: Similar to "Duration," imputing the average for missing values in "Actor_3_facebook_likes" is appropriate.
+
+Delete the "Actor_2_name" column:
+Reason: The name of the second actor is not relevant for the analysis, and it's formatted as characters.
+
+Impute the average for the "Actor_1_facebook_likes" column:
+Reason: Just like "Actor_3_facebook_likes," imputing the average for missing values in "Actor_1_facebook_likes" is suitable.
+
+Delete the "Actor_1_name" column:
+Reason: Similar to "Actor_2_name," the name of the first actor is not relevant for the analysis, and it's formatted as characters.
+
+Impute the average for the "Facenumber_in_poster" column:
+Reason: "Facenumber_in_poster" is numeric and can be imputed with the average as it's unlikely to have a direct correlation with rating or profit although is necessary due to being numeric
+
+Delete the "Plot_keywords" column:
+Reason: "Plot_keywords" may not be necessary for the analysis, and it's covered by the "Genre" column.
+
+Delete the "Content_rating" column:
+Reason: There are too many missing values in the "Content_rating" column.
+
+Delete the "Aspect_ratio" column:
+Reason: There are too many missing values in the "Aspect_ratio" column.
+
+B.
+
+```{r}
+library(ggplot2)
+# Calculate profit for each movie and make it a new column
+Movies$Profit <- Movies$Gross - Movies$Budget
+# Create line graphs
+# Line graph for Profit over IMDB Score
+ggplot(Movies, aes(x = Imdb_score, y = Profit)) +
+  geom_line() +
+  labs(x = "IMDB Score", y = "Profit") +
+  ggtitle("Line Graph: Profit over IMDB Score")
+# Line graph for Profit over Reviews
+ggplot(Movies, aes(x = Reviews, y = Profit)) +
+  geom_line() +
+  labs(x = "Reviews", y = "Profit") +
+  ggtitle("Line Graph: Profit over Reviews")
+# Line graph for Profit over Votes
+ggplot(Movies, aes(x = Votes, y = Profit)) +
+  geom_line() +
+  labs(x = "Votes", y = "Profit") +
+  ggtitle("Line Graph: Profit over Votes")
+# Line graph for Profit over Cast Facebook Likes
+ggplot(Movies, aes(x = Cast_total_facebook_likes, y = Profit)) +
+  geom_line() +
+  labs(x = "Cast Facebook Likes", y = "Profit") +
+  ggtitle("Line Graph: Profit over Cast Facebook Likes")
+# Calculate correlation coefficients
+cor_profit_imdb <- cor(Movies$Profit, Movies$Imdb_score, method = "pearson")
+cor_profit_reviews <- cor(Movies$Profit, Movies$Reviews, method = "pearson")
+cor_profit_votes <- cor(Movies$Profit, Movies$Votes, method = "pearson")
+cor_profit_facebook_likes <- cor(Movies$Profit, Movies$Cast_total_facebook_likes, method = "pearson")
+# Print correlation coefficients
+cat("Correlation between Profit and IMDB Score:", cor_profit_imdb, "\n")
+cat("Correlation between Profit and Reviews:", cor_profit_reviews, "\n")
+cat("Correlation between Profit and Votes:", cor_profit_votes, "\n")
+cat("Correlation between Profit and Cast Facebook Likes:", cor_profit_facebook_likes, "\n")
+```
+
+Summary of Findings
+
+Firstly, we used pearson correlation because:
+Pearson correlation quantifies the strength and direction of the linear relationship between two variables. It helps you determine if there is a positive (direct) or negative (inverse) linear association between the variables.
+Pearson correlation is scale-independent. This means that it doesn't matter what units of measurement you're using for your variables; the correlation coefficient remains the same. This makes it easier to compare relationships between different variables.
+Standardization: Pearson correlation involves standardization of variables, making it less sensitive to outliers than some other correlation methods. Outliers can have a significant impact on correlation measures like the Spearman rank correlation, but they have less influence on the Pearson correlation.
+
+Correlation between Profit and IMDB Score (0.0366):
+There is a weak positive correlation (0.0366) between the profit of movies and their IMDB scores. This suggests that there is only a slight association between a movie's financial success (profit) and its IMDB rating.
+
+Correlation between Profit and Reviews (0.0413):
+Similarly, there is a weak positive correlation (0.0413) between the profit of movies and the number of reviews. This implies that there is a slight relationship between the profit of a movie and the quantity of reviews it receives.
+
+Correlation between Profit and Votes (0.1272):
+There is a somewhat stronger positive correlation (0.1272) between profit and the number of votes a movie receives. This suggests that there is a more noticeable association between profit and the level of audience engagement and voting.
+
+Correlation between Profit and Cast Facebook Likes (0.0426):
+There is a weak positive correlation (0.0426) between the profit of movies and the total Facebook likes of the movie's cast. This indicates that there is a slight connection between a movie's financial success and the popularity of its cast on social media.
+
+In summary, the correlations between profit and these variables are generally weak, with the strongest correlation observed between profit and the number of votes. These findings suggest that profit may not be strongly influenced by individual movie characteristics,other factors and variables not included in this analysis may have a more significant impact on a movie's financial success or they were too affected by the outliers in the data.
+
+C.
+
+```{r}
+# Calculate the correlation coefficients for all numeric variables
+correlation_matrix <- cor(Movies[sapply(Movies, is.numeric)])
+# Print the correlation matrix
+print(correlation_matrix)
+```
+
+Summary of Findings
+
+Findings:
+
+Reviews have a weak positive correlation with Profit (0.0413).
+
+Duration has a very weak positive correlation with Profit (0.0096).
+
+Director Facebook Likes have a very weak positive correlation with Profit (0.0250).
+
+Actor_3 Facebook Likes have a very weak positive correlation with Profit (0.0529).
+
+Actor_1 Facebook Likes have a very weak positive correlation with Profit (0.0287).
+
+Gross has a moderate positive correlation with Profit (0.2081).
+
+Votes have a weak positive correlation with Profit (0.1272).
+
+Cast Total Facebook Likes have a very weak positive correlation with Profit (0.0426).
+
+Face Number in Poster has a very weak positive correlation with Profit (0.0122).
+
+Budget has a strong negative correlation with Profit (-0.9517).
+
+Year has a very weak negative correlation with Profit (-0.0299).
+
+Actor_2 Facebook Likes and Imdb Score have very weak correlations with Profit (NA).
+
+Movie Facebook Likes have a weak positive correlation with Profit (0.0621).
+
+It's important to note that the correlations are relatively weak, indicating that Profit may not be strongly dependent on individual movie characteristics. However, Gross, Votes, and Budget seem to have some influence on Profit, with Gross showing the strongest positive correlation.
+
+D.
+
+Strong Correlations:
+
+Votes and Gross (0.6314):
+There is a strong positive correlation (0.6314) between the number of votes a movie receives and its gross earnings. This suggests that movies with higher gross earnings tend to attract more votes. The reason for this strong correlation could be that popular and successful movies often receive more attention and engagement from the audience, resulting in a higher number of votes.
+
+Votes and Movie Facebook Likes (0.5226):
+There is a strong positive correlation (0.5226) between the number of votes a movie receives and the number of Facebook likes for the movie. This indicates that movies with more Facebook likes also tend to receive more votes. The reasoning behind this could be that movies with a strong online presence and a dedicated fan base are likely to attract more votes from their followers.
+
+Weak Correlations:
+
+Actor_1 Facebook Likes and Facenumber in Poster (0.0646):
+There is a weak positive correlation (0.0646) between the number of Facebook likes of the lead actor and the number of face numbers in the movie poster. This correlation is relatively weak, suggesting that there is not a strong relationship between the popularity of the lead actor and the complexity of the movie poster.
+
+Actor_3 Facebook Likes and Director Facebook Likes (0.1194):
+There is a weak positive correlation (0.1194) between the Facebook likes of the third actor and the Facebook likes of the director. This suggests that there is only a slight connection between the popularity of the third actor and the director. The weak correlation could mean that the success of a movie is not heavily dependent on the combination of these two factors.
+
+```{r}
+# Scatter plot for Votes vs. Gross (Strong Correlation)
+ggplot(Movies, aes(x = Votes, y = Gross)) +
+  geom_point() +
+  labs(x = "Votes", y = "Gross") +
+  ggtitle("Scatter Plot: Votes vs. Gross (Strong Correlation)")
+# Scatter plot for Votes vs. Movie Facebook Likes (Strong Correlation)
+ggplot(Movies, aes(x = Votes, y = Movie_facebook_likes)) +
+  geom_point() +
+  labs(x = "Votes", y = "Movie Facebook Likes") +
+  ggtitle("Scatter Plot: Votes vs. Movie Facebook Likes (Strong Correlation)")
+# Scatter plot for Actor_1 Facebook Likes vs. Facenumber in Poster (Weak Correlation)
+ggplot(Movies, aes(x = Actor_1_facebook_likes, y = Facenumber_in_poster)) +
+  geom_point() +
+  labs(x = "Actor_1 Facebook Likes", y = "Facenumber in Poster") +
+  ggtitle("Scatter Plot: Actor_1 Facebook Likes vs. Facenumber in Poster (Weak Correlation)")
+# Scatter plot for Actor_3 Facebook Likes vs. Director Facebook Likes (Weak Correlation)
+ggplot(Movies, aes(x = Actor_3_facebook_likes, y = Director_facebook_likes)) +
+  geom_point() +
+  labs(x = "Actor_3 Facebook Likes", y = "Director Facebook Likes") +
+  ggtitle("Scatter Plot: Actor_3 Facebook Likes vs. Director Facebook Likes (Weak Correlation)")
+```
+
+Task 3
+
+A.
+
+```{r}
+library(readr)
+library(readr)
+MobilePhoneData <- read_csv("MobilePhoneData.csv", 
+    col_names = FALSE)
+View(MobilePhoneData)
+MobilePhoneData <- MobilePhoneData %>%
+  select(-X1)
+View(MobilePhoneData)
+# Identify missing values
+missing_values <- sum(is.na(MobilePhoneData))
+# Check for missing values in each column of the "MobilePhoneData" dataset
+missing_values_by_column <- colSums(is.na(MobilePhoneData))
+# Print the total number of missing values in the "MobilePhoneData" dataset
+cat("Total missing values in the 'MobilePhoneData' dataset: ", missing_values, "\n")
+# Print missing values count for each column
+for (col_name in names(missing_values_by_column)) {
+  cat("Column '", col_name, "': ", missing_values_by_column[col_name], " missing values\n")
+}
+# Create a list of columns to remove
+columns_to_remove <- names(missing_values_by_column[missing_values_by_column > 0])
+# Remove the columns with one or more missing values
+MobilePhoneData <- MobilePhoneData[, !names(MobilePhoneData) %in% columns_to_remove]
+# Replace "YES" with 1 and "NO" with 0 in all columns of 'MobilePhoneData'
+MobilePhoneData[] <- lapply(MobilePhoneData, function(x) ifelse(x == "YES", 1, ifelse(x == "NO", 0, x)))
+# Print the modified data frame
+print(MobilePhoneData)
+
+```
+
+Reason for removing the data
+
+The reason I removed the data is because its all vital information in order to compare the phones and then be able to rank them. Without complete data there would be bias towards which phone is better or worse. I also removed all characters so its easier to work with.
+
+B.
+
+```{r}
+# Function to normalize
+normalize_row <- function(row) {
+  # Convert the row to a numeric vector, replacing NAs with 0
+  row_numeric <- as.numeric(row)
+  row_numeric[is.na(row_numeric)] <- 0
+  
+  min_val <- min(row_numeric)
+  max_val <- max(row_numeric)
+  if (max_val != min_val) {
+    normalized_row <- 1 * (row_numeric - min_val) / (max_val - min_val)
+  } else {
+    normalized_row <- rep(0, length(row_numeric))
+  }
+  return(normalized_row)
+}
+# Apply the normalization function to each row
+normalized_data <- as.data.frame(t(apply(MobilePhoneData, 1, normalize_row)))
+# Print the normalized data
+print(normalized_data)
+
+```
+
+The reason for normalizing the data
+
+Data normalisation or scaling is the process of bringing all the feature values into the same range.
+Data often comes from different sources and in different units. Normalization brings all your data to a common scale, making it easier to compare and analyze. With our data each variable was measure very differently with same ranging between 0-1 and others well over a thousand which would result in a skewed and ugly visualization which what would seem like many outliers. 
+Normalization removes the units of measurement as well, making it easier to interpret and compare the data.
+By normalizing data, you can more easily spot patterns and trends in the data because you remove the variations introduced by different scales. This allows you to focus on the inherent relationships between variables.
+Normalized data is more interpretative. It becomes easier to understand the impact of a unit change in one variable on the outcome when all variables are on the same scale.
+
+C.
+
+```{r}
+library(ggplot2)
+# Create histograms for each variable and display them one by one (excluding 'ID')
+for (col in names(normalized_data)[-1]) {  # Exclude the first column (ID)
+  gg <- ggplot(normalized_data, aes_string(x = col)) +
+    geom_histogram(fill = "blue", color = "black", bins = 20) +
+    labs(title = paste("Histogram of", col)) +
+    theme_minimal()
+  
+  print(gg)
+}
+
+```
+
+
+D.
+
+```{r}
+# Transpose the data frame
+data_transposed <- t(MobilePhoneData)
+# Create a new data frame with the first row as the header
+new_header <- as.character(data_transposed[1, ])
+new_data <- data.frame(data_transposed[-1, ], stringsAsFactors = FALSE)
+# Set the new header
+names(new_data) <- new_header
+# Convert all values in the dataset to numeric
+new_data <- as.data.frame(lapply(new_data, as.numeric))
+str(new_data)
+# Print the transposed data frame with the corrected header
+print(new_data)
+
+# Calculate the mean of each column
+mean_values <- colMeans(new_data, na.rm = TRUE)
+cat("Mean Values:\n")
+print(mean_values)
+# Calculate the median of each column
+median_values <- sapply(new_data, median, na.rm = TRUE)
+cat("\nMedian Values:\n")
+print(median_values)
+# Calculate the range (max - min) and min/max for each column
+range_values <- sapply(new_data, function(x) {
+  min_val <- min(x, na.rm = TRUE)
+  max_val <- max(x, na.rm = TRUE)
+  range_val <- max_val - min_val
+  c(min = min_val, max = max_val, range = range_val)
+})
+cat("Range Values (Min, Max, and Range):\n")
+print(range_values)
+# Custom mode function
+get_mode <- function(x) {
+  unique_x <- unique(x)
+  tab_x <- tabulate(match(x, unique_x))
+  unique_x[tab_x == max(tab_x)]
+}
+# Calculate the mode for each column
+mode_values <- sapply(new_data, get_mode)
+cat("\nMode Values:\n")
+print(mode_values)
+# Calculate quartiles (1st, 2nd [median], and 3rd quartiles) for each column
+quartile_values <- sapply(new_data, quantile, probs = c(0.25, 0.5, 0.75), na.rm = TRUE)
+cat("\nQuartile Values:\n")
+print(quartile_values)
+# Create a boxplot for each column
+boxplot(new_data, main="Boxplot for Each Column")
+```
+
+
+Summary of findings:
+
+The "Battery Power" distribution shows a wide range of values, with a relatively even spread across the quartiles. The presence of multiple modes suggests distinct clusters of battery power levels in the dataset which is obvious.
+The "RAM" distribution is characterized by a relatively high mean and median, indicating that most devices have a good amount of RAM. The range is substantial, suggesting a variety of RAM configurations in the dataset.
+The front and rear camera features have different central tendencies. Front camera (fc) is skewed, with a mode around 1.5, while rear camera (pc) shows a mode at 11. Both features exhibit a range of 0 to 16, suggesting variations in camera specifications.
+The screen height (sc_h) is slightly higher on average than the screen width (sc_w). However, both features have a mode at 0, indicating some devices may have zero screen size.
+Bluetooth (blue), 3G (three_g), Touch Screen (touch_screen), and WiFi (wifi) features are binary (0 or 1), indicating the presence or absence of these features.
+These features are binary, and the majority of devices seem to have these functionalities as the mode is 1 for each.
+Both Memory and Weight features have a range indicating variations in internal memory and mobile weight.
+The internal memory and mobile weight features show a spread of values, but with central tendencies around 29.43 and 138.5, respectively.
+In summary, the dataset represents various attributes related to mobile phones. The findings suggest diversity in features such as battery power, RAM, camera specifications, screen size, memory, and weight. Binary features for wireless connectivity are common in the dataset, and some features exhibit multimodal distributions, indicating the presence of distinct groups or clusters within the data.
+
+
+
+
